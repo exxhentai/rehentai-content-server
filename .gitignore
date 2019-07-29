@@ -1,0 +1,6 @@
+bin/
+pkg/
+github.com/
+golang.org/
+go.opencensus.io/
+honnef.co/
