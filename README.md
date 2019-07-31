@@ -17,6 +17,10 @@ $ go get -u github.com/ipfs/go-ipfs-api
 Since the frontend server is still WIP, I use `curl` to test file uploading through http request.
 
 ```shell=
+$ go run main --help
+  -port int
+         (default 1234)
+
 # upload single file
 $ curl -v -F "file[]=@test01.zip" http://localhost:1234/
 
