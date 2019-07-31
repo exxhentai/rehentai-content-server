@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"regexp"
 	"strings"
 
 	ipfs "github.com/ipfs/go-ipfs-api"
@@ -100,6 +101,7 @@ func (s Server) receive(w http.ResponseWriter, r *http.Request) (filenames []str
 
 func (s Server) decompress(filenames []string, folder_ch chan<- string) {
 	dest := os.TempDir()
+	re := regexp.MustCompile("\\.(png|jpg|jpeg|bmp)\\z")
 
 	for _, fn := range filenames {
 		go func(filename string) {
@@ -131,6 +133,11 @@ func (s Server) decompress(filenames []string, folder_ch chan<- string) {
 						baseFolder = filepath
 					}
 
+					continue
+				}
+
+				// exclude non-image extension
+				if !re.MatchString(path.Ext(f.Name)) {
 					continue
 				}
 
@@ -182,11 +189,6 @@ func (s Server) waitingForUpload(folder_ch <-chan string) {
 			continue
 		}
 
-		lsLink, err := s.shell.List(hash)
-		if err != nil {
-			log.Println("[ERROR]", err)
-		}
-
-		fmt.Println(hash, folder)
+		fmt.Println(hash, path.Base(folder))
 	}
 }
