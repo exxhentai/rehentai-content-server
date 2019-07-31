@@ -31,17 +31,21 @@ func NewServer() *Server {
 func (s Server) Start(port int) {
 	log.Println("[INFO]", "Starting rehentai content server")
 
+	folder_ch := make(chan string, 16)
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case "GET":
 		case "POST":
 			filenames := s.receive(w, r)
 			fmt.Println(filenames)
-			s.decompress(filenames)
+			s.decompress(filenames, folder_ch)
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
 	})
+
+	go s.waitingForUpload(folder_ch)
 
 	http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
 }
@@ -94,7 +98,7 @@ func (s Server) receive(w http.ResponseWriter, r *http.Request) (filenames []str
 	return
 }
 
-func (s Server) decompress(filenames []string) {
+func (s Server) decompress(filenames []string, folder_ch chan<- string) {
 	dest := os.TempDir()
 
 	for _, fn := range filenames {
@@ -108,6 +112,8 @@ func (s Server) decompress(filenames []string) {
 
 			defer reader.Close()
 
+			var baseFolder string
+
 			for _, f := range reader.File {
 				filepath := path.Join(dest, f.Name)
 
@@ -119,8 +125,12 @@ func (s Server) decompress(filenames []string) {
 
 				// create folder
 				if f.FileInfo().IsDir() {
-					fmt.Println(f.Name)
 					os.MkdirAll(filepath, os.ModePerm)
+
+					if l := len(baseFolder); l == 0 || len(filepath) < l {
+						baseFolder = filepath
+					}
+
 					continue
 				}
 
@@ -156,6 +166,27 @@ func (s Server) decompress(filenames []string) {
 					return
 				}
 			}
+
+			folder_ch <- baseFolder
 		}(fn)
+	}
+}
+
+func (s Server) waitingForUpload(folder_ch <-chan string) {
+	for {
+		folder := <-folder_ch
+
+		hash, err := s.shell.AddDir(folder)
+		if err != nil {
+			log.Println("[ERROR]", err)
+			continue
+		}
+
+		lsLink, err := s.shell.List(hash)
+		if err != nil {
+			log.Println("[ERROR]", err)
+		}
+
+		fmt.Println(hash, folder)
 	}
 }
