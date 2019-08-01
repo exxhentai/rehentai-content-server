@@ -175,6 +175,9 @@ func (s Server) decompress(filenames []string, folder_ch chan<- string) {
 			}
 
 			folder_ch <- baseFolder
+
+			// remove decompressed zip
+			os.Remove(path.Join(dest, filename))
 		}(fn)
 	}
 }
@@ -190,5 +193,8 @@ func (s Server) waitingForUpload(folder_ch <-chan string) {
 		}
 
 		fmt.Println(hash, path.Base(folder))
+
+		// remove uploaded folder
+		os.RemoveAll(folder)
 	}
 }
