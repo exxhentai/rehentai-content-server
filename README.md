@@ -10,7 +10,8 @@ The build process for requires Go 1.12 or higher.
 
 ### Install Dependency
 ```shell
-$ go get -u github.com/ipfs/go-ipfs-api
+$ go get -u -v github.com/ipfs/go-ipfs-api
+$ go get -u -v github.com/gorilla/websocket
 ```
 
 ## Usage

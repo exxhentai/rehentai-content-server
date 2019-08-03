@@ -5,3 +5,4 @@ golang.org/
 go.opencensus.io/
 honnef.co/
 .*.swp
+.vscode/
