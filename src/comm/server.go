@@ -13,8 +13,7 @@ import (
 type Server struct {
 	shell   *ipfs.Shell
 	shMux   *sync.Mutex
-	ws      *websocket.Upgrader
-	pinlist *([]*websocket.Conn)
+	pinlist []*websocket.Conn
 }
 
 func NewServer() *Server {
@@ -25,7 +24,7 @@ func NewServer() *Server {
 		return nil
 	} else {
 		l := []*websocket.Conn{}
-		return &Server{sh, &sync.Mutex{}, &websocket.Upgrader{}, &l}
+		return &Server{sh, &sync.Mutex{}, l}
 	}
 }
 
@@ -53,14 +52,15 @@ func (s Server) Start(port int) {
 }
 
 func (s Server) wshandler(w http.ResponseWriter, r *http.Request) {
-	conn, err := s.ws.Upgrade(w, r, nil)
+	upgrader := &websocket.Upgrader{}
+	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	list := *(s.pinlist)
+	list := s.pinlist
 	list = append(list, conn)
-	s.pinlist = &list
+	s.pinlist = list
 	go func(conn *websocket.Conn) {
 		for {
 			_, msg, err := conn.ReadMessage()
