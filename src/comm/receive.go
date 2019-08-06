@@ -11,7 +11,6 @@ import (
 	"path"
 	"regexp"
 	"strings"
-	
 )
 
 func (s Server) receive(w http.ResponseWriter, r *http.Request) (filenames []string) {
@@ -97,12 +96,14 @@ func (s Server) upload(filenames []string, w http.ResponseWriter) {
 			os.RemoveAll(folder)
 		}(fn, hash_ch)
 	}
-
+	hash_list := make([]string, len(filenames))
 	for i := 0; i < len(filenames); i++ {
 		if hash := <-hash_ch; hash != "" {
 			w.Write([]byte(hash + "\n"))
+			hash_list[i] = hash
 		}
 	}
+	s.pin(hash_list)
 }
 
 func decompress(dir, filename string) (string, error) {
@@ -171,4 +172,26 @@ func decompress(dir, filename string) (string, error) {
 	os.Remove(path.Join(dir, filename))
 
 	return baseFolder, nil
+}
+
+func (s Server) pin(list []string) {
+	type PushMsg struct {
+		CommandID int
+		parm      string
+	}
+	nodeNum := len(s.pinlist)
+	if nodeNum == 0 {
+		log.Println("None node!")
+		return
+	}
+	listNum := len(list)
+	for i := 0; i < listNum; i++ {
+		j := i % nodeNum
+		conn := s.pinlist[j]
+		data := PushMsg{
+			CommandID: 0,
+			parm:      list[i],
+		}
+		conn.WriteJSON(data)
+	}
 }
