@@ -1,19 +1,43 @@
 # rehentai-content-server
+
 A simple ipfs client. Please exec after launching ipfs daemon.
 
+## Docker Usage
+
+Start Go-IPFS using docker as https://github.com/ipfs/go-ipfs#docker-usage :
+
+```shell
+export ipfs_staging=</absolute/path/to/somewhere/>
+export ipfs_data=</absolute/path/to/somewhere_else/>
+
+docker run -d --name ipfs_host -v $ipfs_staging:/export -v $ipfs_data:/data/ipfs -p 4001:4001 -p 127.0.0.1:8080:8080 -p 127.0.0.1:5001:5001 ipfs/go-ipfs:latest
+```
+
+Build and run this repo:
+
+```shell
+docker build . -t rehentai-content-server
+docker run -d --name rehentai-content-server rehentai-content-server
+```
+
 ## System Requirements
+
 ### Install Go
+
 The build process for requires Go 1.12 or higher.
 
 ### Install go-ipfs
+
 [https://github.com/ipfs/go-ipfs#install](https://github.com/ipfs/go-ipfs#install)
 
 ### Install Dependency
+
 ```shell
 $ go get -u github.com/ipfs/go-ipfs-api
 ```
 
 ## Usage
+
 Since the frontend server is still WIP, I use `curl` to test file uploading through http request.
 
 ```shell=
@@ -31,9 +55,11 @@ $ curl -v -F "file[]=@test01.zip" \
 ```
 
 ### File Extension
+
 This server currently only accept file type `zip`. This file will be decompress, and all decompressed files in type `png`, `jpg`, `jpeg`, `bmp` will be uploaded to ipfs node.
 
 ### Response
+
 The IPFS hashes will be sent by http response in following format.
 
 ```shell
